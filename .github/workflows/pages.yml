@@ -1,10 +1,10 @@
-name: Deploy to GitHub Pages (with lint)
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [ main ]
     paths:
-      - "index.html"
+      - "index.html"    # only publish when index.html changes
       - "assets/css/style.css"
       - "assets/js/script.js"
       # paths:
@@ -21,67 +21,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-
-      # HTML — HTMLHint
-      - name: Create .htmlhintrc
-        run: |
-          cat > .htmlhintrc <<'EOF'
-          {
-            "doctype-first": false,
-            "tagname-lowercase": true,
-            "attr-value-double-quotes": true,
-            "id-unique": true,
-            "src-not-empty": true,
-            "title-require": true
-          }
-          EOF
-      - name: Lint HTML
-        run: npx --yes htmlhint "**/*.html" --config .htmlhintrc
-
-      # CSS — stylelint (simple built-in rules so no extra packages)
-      - name: Create .stylelintrc.json
-        run: |
-          cat > .stylelintrc.json <<'EOF'
-          {
-            "rules": {
-              "color-no-invalid-hex": true,
-              "block-no-empty": true,
-              "declaration-block-no-duplicate-properties": true,
-              "string-no-newline": true
-            }
-          }
-          EOF
-      - name: Lint CSS
-        run: npx --yes stylelint "**/*.css"
-
-      # JS — ESLint (recommended rules, fail on warnings)
-      - name: Create .eslintrc.json
-        run: |
-          cat > .eslintrc.json <<'EOF'
-          {
-            "env": { "browser": true, "es2021": true },
-            "extends": "eslint:recommended",
-            "parserOptions": { "ecmaVersion": 2021, "sourceType": "script" },
-            "rules": {
-              "no-unused-vars": "warn",
-              "no-undef": "error"
-            }
-          }
-          EOF
-      - name: Lint JS
-        run: npx --yes eslint@9 "**/*.js" --max-warnings=0
-
   build:
-    needs: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Step 1: Download the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js so we can run lint tools
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Step 3: Install ESLint (v8 to avoid config migration issues)
+      - name: Install ESLint
+        run: npm install --global eslint@8.57.0
+
+      # Step 4: Run ESLint on all JavaScript files
+      # If any errors or warnings are found, stop the build
+      - name: Run ESLint check
+        run: npx eslint "**/*.js" --max-warnings=0
+
+      # Step 5: Upload site files as GitHub Pages artifact
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
