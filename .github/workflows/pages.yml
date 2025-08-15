@@ -1,36 +1,46 @@
+# This is the name of our GitHub Actions workflow.
+# It will show up in the "Actions" tab inside GitHub so we know what it does.
 name: Deploy to GitHub Pages
 
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - "index.html"    # only publish when index.html changes
-  workflow_dispatch:
+on:  # This section decides WHEN this workflow will run.
+  push:  # "push" means when we push (upload) new commits to GitHub.
+    branches: [ main ]  # Only run when changes are pushed to the "main" branch.
+    paths:  # We only want to run when certain files change, not every file.
+      - "index.html"    # If index.html changes, run the workflow.
+      - "assets/css/style.css"  # If our main style sheet changes, run the workflow.
+      - "assets/js/script.js"   # If our main JavaScript changes, run the workflow.
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+      # If we ever want the workflow to run when ANY file changes,
+      # we can use the two lines below by removing the "#" at the start:
+      # paths:
+      #   - "**"   # "**" means "all files everywhere inside this project."
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
+  workflow_dispatch:  # This lets us run the workflow manually from the Actions tab.
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/upload-pages-artifact@v3
+permissions:  # This part says what powers (permissions) the workflow has.
+  contents: read  # It can read the code/content from the repo.
+  pages: write    # It can publish (write) to GitHub Pages.
+  id-token: write # It can create an ID token for secure deployment.
+
+concurrency:  # This stops multiple copies of the same workflow running at once.
+  group: "pages"             # Give this workflow group the name "pages".
+  cancel-in-progress: true   # If a new run starts, cancel the old one.
+
+jobs:  # This section contains all the tasks the workflow will do.
+  build:  # First job: prepare (build) our site for deployment.
+    runs-on: ubuntu-latest  # Use the newest Ubuntu Linux environment to run the job.
+    steps:  # Steps are like instructions inside the job.
+      - uses: actions/checkout@v4  # Step 1: Check out (download) our repo’s code so we can use it.
+      - uses: actions/upload-pages-artifact@v3  # Step 2: Package our site as an "artifact" for GitHub Pages.
         with:
-          path: .   # site root (index.html, assets/, etc.)
+          path: .   # "." means "upload everything from the root folder of the repo."
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
+  deploy:  # Second job: actually put the site online.
+    needs: build  # This job waits until the "build" job finishes first.
+    runs-on: ubuntu-latest  # Again, use Ubuntu to run the job.
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: github-pages  # This tells GitHub we are publishing to GitHub Pages.
+      url: ${{ steps.deployment.outputs.page_url }}  # This will store the final live website URL.
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - id: deployment  # Name this step "deployment" so we can use its outputs later.
+        uses: actions/deploy-pages@v4  # This step takes the "artifact" we made and publishes it to GitHub Pages.
