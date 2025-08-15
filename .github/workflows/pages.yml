@@ -26,21 +26,63 @@ concurrency:  # This stops multiple copies of the same workflow running at once.
   group: "pages"             # Give this workflow group the name "pages".
   cancel-in-progress: true   # If a new run starts, cancel the old one.
 
-jobs:  # This section contains all the tasks the workflow will do.
-  build:  # First job: prepare (build) our site for deployment.
-    runs-on: ubuntu-latest  # Use the newest Ubuntu Linux environment to run the job.
-    steps:  # Steps are like instructions inside the job.
-      - uses: actions/checkout@v4  # Step 1: Check out (download) our repo’s code so we can use it.
-      - uses: actions/upload-pages-artifact@v3  # Step 2: Package our site as an "artifact" for GitHub Pages.
-        with:
-          path: .   # "." means "upload everything from the root folder of the repo."
+## Direct CI/CD capabilities:
 
-  deploy:  # Second job: actually put the site online.
-    needs: build  # This job waits until the "build" job finishes first.
-    runs-on: ubuntu-latest  # Again, use Ubuntu to run the job.
-    environment:
-      name: github-pages  # This tells GitHub we are publishing to GitHub Pages.
-      url: ${{ steps.deployment.outputs.page_url }}  # This will store the final live website URL.
+# jobs:  # This section contains all the tasks the workflow will do.
+#   build:  # First job: prepare (build) our site for deployment.
+#     runs-on: ubuntu-latest  # Use the newest Ubuntu Linux environment to run the job.
+#     steps:  # Steps are like instructions inside the job.
+#       - uses: actions/checkout@v4  # Step 1: Check out (download) our repo’s code so we can use it.
+#       - uses: actions/upload-pages-artifact@v3  # Step 2: Package our site as an "artifact" for GitHub Pages.
+#         with:
+#           path: .   # "." means "upload everything from the root folder of the repo."
+
+#   deploy:  # Second job: actually put the site online.
+#     needs: build  # This job waits until the "build" job finishes first.
+#     runs-on: ubuntu-latest  # Again, use Ubuntu to run the job.
+#     environment:
+#       name: github-pages  # This tells GitHub we are publishing to GitHub Pages.
+#       url: ${{ steps.deployment.outputs.page_url }}  # This will store the final live website URL.
+#     steps:
+#       - id: deployment  # Name this step "deployment" so we can use its outputs later.
+#         uses: actions/deploy-pages@v4  # This step takes the "artifact" we made and publishes it to GitHub Pages.
+
+
+## Direct CI/CD capabilities:
+
+
+## Advance CI/CD capabilities: Adding Run tests before deploying:
+
+jobs:
+  lint:
+    name: Lint HTML/CSS/JS
+    runs-on: ubuntu-latest
     steps:
-      - id: deployment  # Name this step "deployment" so we can use its outputs later.
-        uses: actions/deploy-pages@v4  # This step takes the "artifact" we made and publishes it to GitHub Pages.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  build:
+    name: Build artifact
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    name: Deploy to Pages
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
