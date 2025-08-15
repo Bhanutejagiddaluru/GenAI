@@ -54,7 +54,7 @@ jobs:
       - uses: actions/setup-node@v4 # Step 2: Install Node.js (needed for lint tools)
         with:
           node-version: 20   # Use Node.js version 20
-          cache: npm         # Cache npm dependencies for speed (needs package-lock.json)
+          #cache: npm         # Cache npm dependencies for speed (needs package-lock.json)
       - run: npm install --no-fund --no-audit # Step 3: Install dependencies (skip ads & audits)
       - run: npm run lint    # Step 4: Run the linting command from package.json
 
