@@ -38,50 +38,72 @@ concurrency:
   group: "pages"            # Group name for workflow runs
   cancel-in-progress: true  # Cancel old run if a new one starts
 
-# ----------------------------------------------------
-# JOBS TO RUN (Steps in CI/CD pipeline)
-# ----------------------------------------------------
-jobs:
+# # ----------------------------------------------------
+# # JOBS TO RUN (Steps in CI/CD pipeline)
+# # ----------------------------------------------------
+# jobs:
 
-  # ----------------------------------------------------
-  # 1) LINT JOB – Check HTML, CSS, JS before deploying
-  # ----------------------------------------------------
-  lint:
-    name: Lint HTML/CSS/JS   # Friendly job name
-    runs-on: ubuntu-latest   # Run on latest Ubuntu Linux server
-    steps:
-      - uses: actions/checkout@v4 # Step 1: Download repo content
-      - uses: actions/setup-node@v4 # Step 2: Install Node.js (needed for lint tools)
+#   # ----------------------------------------------------
+#   # 1) LINT JOB – Check HTML, CSS, JS before deploying
+#   # ----------------------------------------------------
+#   lint:
+#     name: Lint HTML/CSS/JS   # Friendly job name
+#     runs-on: ubuntu-latest   # Run on latest Ubuntu Linux server
+#     steps:
+#       - uses: actions/checkout@v4 # Step 1: Download repo content
+#       - uses: actions/setup-node@v4 # Step 2: Install Node.js (needed for lint tools)
+#         with:
+#           node-version: 20   # Use Node.js version 20
+#           #cache: npm         # Cache npm dependencies for speed (needs package-lock.json)
+#       - run: npm install --no-fund --no-audit # Step 3: Install dependencies (skip ads & audits)
+#       - run: npm run lint    # Step 4: Run the linting command from package.json
+
+#   # ----------------------------------------------------
+#   # 2) BUILD JOB – Prepare site for deployment
+#   # ----------------------------------------------------
+#   build:
+#     name: Build artifact
+#     runs-on: ubuntu-latest
+#     needs: lint              # Only run if lint passes
+#     steps:
+#       - uses: actions/checkout@v4     # Download repo content
+#       - uses: actions/configure-pages@v5 # Prepare GitHub Pages config
+#       - uses: actions/upload-pages-artifact@v3 # Package site files for deployment
+#         with:
+#           path: . # Upload everything from repo root (index.html, assets/, etc.)
+
+#   # ----------------------------------------------------
+#   # 3) DEPLOY JOB – Publish site to GitHub Pages
+#   # ----------------------------------------------------
+#   deploy:
+#     name: Deploy to Pages
+#     runs-on: ubuntu-latest
+#     needs: build            # Only run if build passes
+#     environment:
+#       name: github-pages    # Target GitHub Pages environment
+#       url: ${{ steps.deployment.outputs.page_url }} # Store final live URL
+#     steps:
+#       - id: deployment
+#         uses: actions/deploy-pages@v4 # Deploy packaged site to Pages
+
+# 
+#  Direct CI/CD
+# 
+jobs:  # This section contains all the tasks the workflow will do.
+  build:  # First job: prepare (build) our site for deployment.
+    runs-on: ubuntu-latest  # Use the newest Ubuntu Linux environment to run the job.
+    steps:  # Steps are like instructions inside the job.
+      - uses: actions/checkout@v4  # Step 1: Check out (download) our repo’s code so we can use it.
+      - uses: actions/upload-pages-artifact@v3  # Step 2: Package our site as an "artifact" for GitHub Pages.
         with:
-          node-version: 20   # Use Node.js version 20
-          #cache: npm         # Cache npm dependencies for speed (needs package-lock.json)
-      - run: npm install --no-fund --no-audit # Step 3: Install dependencies (skip ads & audits)
-      - run: npm run lint    # Step 4: Run the linting command from package.json
+          path: .   # "." means "upload everything from the root folder of the repo."
 
-  # ----------------------------------------------------
-  # 2) BUILD JOB – Prepare site for deployment
-  # ----------------------------------------------------
-  build:
-    name: Build artifact
-    runs-on: ubuntu-latest
-    needs: lint              # Only run if lint passes
-    steps:
-      - uses: actions/checkout@v4     # Download repo content
-      - uses: actions/configure-pages@v5 # Prepare GitHub Pages config
-      - uses: actions/upload-pages-artifact@v3 # Package site files for deployment
-        with:
-          path: . # Upload everything from repo root (index.html, assets/, etc.)
-
-  # ----------------------------------------------------
-  # 3) DEPLOY JOB – Publish site to GitHub Pages
-  # ----------------------------------------------------
-  deploy:
-    name: Deploy to Pages
-    runs-on: ubuntu-latest
-    needs: build            # Only run if build passes
+  deploy:  # Second job: actually put the site online.
+    needs: build  # This job waits until the "build" job finishes first.
+    runs-on: ubuntu-latest  # Again, use Ubuntu to run the job.
     environment:
-      name: github-pages    # Target GitHub Pages environment
-      url: ${{ steps.deployment.outputs.page_url }} # Store final live URL
+      name: github-pages  # This tells GitHub we are publishing to GitHub Pages.
+      url: ${{ steps.deployment.outputs.page_url }}  # This will store the final live website URL.
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4 # Deploy packaged site to Pages
+      - id: deployment  # Name this step "deployment" so we can use its outputs later.
+        uses: actions/deploy-pages@v4  # This step takes the "artifact" we made and publishes it to GitHub Pages.
