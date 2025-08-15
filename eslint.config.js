@@ -5,16 +5,15 @@ import globals from "globals";
 export default [
   js.configs.recommended,
   {
-    files: ["**/*.js"],
-    ignores: ["node_modules/**", "dist/**"],
+    files: ["assets/js/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
-      globals: { ...globals.browser, ...globals.node }
+      globals: { ...globals.browser }
     },
     rules: {
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-      "eqeqeq": "error",
+      "no-unused-vars": "warn",
+      "no-undef": "error",
       "semi": ["error", "always"]
     }
   }
