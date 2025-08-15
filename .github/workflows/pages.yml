@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm install --no-fund --no-audit
       - run: npm run lint
 
   build:
@@ -72,6 +72,7 @@ jobs:
     needs: lint
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
