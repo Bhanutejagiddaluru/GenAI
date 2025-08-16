@@ -1,0 +1,60 @@
+name: Deploy Pages (tagged)
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write        # create tags/releases
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build step (static): copy repo -> _site
+      - name: Build static site
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          rsync -a --exclude '_site' ./ _site/
+
+      # Upload to GitHub Pages artifact
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      # Create version tag like vYYYY.MM.DD-HHMM
+      - name: Create tag
+        id: tag
+        run: |
+          TS=$(date -u +"%Y.%m.%d-%H%M")
+          echo "TAG=v$TS" >> $GITHUB_OUTPUT
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      # Optional: create a release with the built zip (handy for auditing)
+      - name: Zip build
+        run: (cd _site && zip -r ../site.zip .)
+      - name: Create Release & Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: ${{ steps.tag.outputs.TAG }}
+          files: site.zip
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
