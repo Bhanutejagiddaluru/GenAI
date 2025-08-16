@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint: # 1️⃣ Linting job
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,9 +35,14 @@ jobs:
       - name: Lint HTML
         run: htmlhint index.html
 
+      - name: Lint CSS (inline config, no file needed)
+        run: stylelint "assets/css/**/*.css" --config '{"extends":"stylelint-config-standard"}'
+
+      - name: Lint JS
+        run: eslint "assets/js/**/*.js"
 
   build:
-    needs: lint # ✅ Only run if lint passes
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
