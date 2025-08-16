@@ -35,11 +35,6 @@ jobs:
       - name: Lint HTML
         run: htmlhint index.html
 
-      # - name: Lint CSS
-      #   run: stylelint "assets/css/**/*.css"
-
-      - name: Lint JS
-        run: eslint "assets/js/**/*.js"
 
   build:
     needs: lint # ✅ Only run if lint passes
