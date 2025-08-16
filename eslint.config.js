@@ -1,14 +1,21 @@
+// eslint.config.js (ESLint v9 flat config)
 export default [
   {
     files: ["assets/js/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
-      sourceType: "module",
+      sourceType: "script", // your script is loaded via <script>, not as a module
+      globals: {
+        window: "readonly",
+        document: "readonly",
+        alert: "readonly",
+        emailjs: "readonly"
+      }
     },
     rules: {
-      "no-unused-vars": "warn",
       "no-undef": "error",
+      "no-unused-vars": "warn",
       "no-extra-semi": "warn"
-    },
-  },
+    }
+  }
 ];
