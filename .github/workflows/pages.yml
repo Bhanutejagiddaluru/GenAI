@@ -35,8 +35,8 @@ jobs:
       - name: Lint HTML
         run: htmlhint index.html
 
-      - name: Lint CSS
-        run: stylelint "assets/css/**/*.css"
+      - name: Lint CSS (with auto-fix)
+        run: stylelint "assets/css/**/*.css" --fix
 
       - name: Lint JS
         run: eslint "assets/js/**/*.js"
