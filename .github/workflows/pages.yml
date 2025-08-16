@@ -35,8 +35,8 @@ jobs:
       - name: Lint HTML
         run: htmlhint index.html
 
-      - name: Lint CSS (inline config, no file needed)
-        run: stylelint "assets/css/**/*.css" --config '{"extends":"stylelint-config-standard"}'
+      - name: Lint CSS
+        run: stylelint "assets/css/**/*.css"
 
       - name: Lint JS
         run: eslint "assets/js/**/*.js"
