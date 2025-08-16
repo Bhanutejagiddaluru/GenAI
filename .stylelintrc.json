@@ -1,6 +1,7 @@
 {
   "extends": ["stylelint-config-standard"],
   "rules": {
+    "color-function-alias-notation": null,
     "color-function-notation": null,
     "alpha-value-notation": null,
     "hue-degree-notation": null,
