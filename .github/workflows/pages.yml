@@ -1,14 +1,12 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages with Linting
 
 on:
   push:
     branches: [ main ]
     paths:
-      - "index.html"    # only publish when index.html changes
+      - "index.html"
       - "assets/css/style.css"
       - "assets/js/script.js"
-      # paths:
-      #   - "**"   # enable later to deploy on ANY change
   workflow_dispatch:
 
 permissions:
@@ -21,36 +19,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  lint: # 1️⃣ Linting job
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Download the repository code
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js so we can run lint tools
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Step 3: Install ESLint
-      - name: Install ESLint
-        run: npm install --global eslint@8.57.0
+      - name: Install linting tools
+        run: npm install -g htmlhint stylelint stylelint-config-standard eslint
 
-      # Step 4: Run ESLint with inline rules (no config file in repo)
-      - name: Run ESLint check
-        run: |
-          npx eslint@8.57.0 "assets/js/**/*.js" \
-            --no-eslintrc \
-            --env browser \
-            --parser-options '{"ecmaVersion": 2021, "sourceType": "script"}' \
-            --global emailjs:true \
-            --rule 'no-undef:error' \
-            --rule 'no-unused-vars:warn' \
-            --max-warnings=0
+      - name: Lint HTML
+        run: htmlhint index.html
 
-      # Step 5: Upload site files as GitHub Pages artifact
+      - name: Lint CSS
+        run: stylelint "assets/css/**/*.css"
+
+      - name: Lint JS
+        run: eslint "assets/js/**/*.js"
+
+  build:
+    needs: lint # ✅ Only run if lint passes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
