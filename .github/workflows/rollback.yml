@@ -1,0 +1,48 @@
+name: Rollback Pages
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to rollback to (e.g., v2025.08.15-2210). Leave blank for latest."
+        required: false
+        default: ""
+
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch tags
+        run: |
+          git init
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git fetch --tags --depth=1
+          echo "INPUT=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          if [ -z "${{ github.event.inputs.tag }}" ]; then
+            LATEST=$(git tag --sort=-creatordate | head -n 1)
+            echo "TAG=$LATEST" >> $GITHUB_ENV
+          else
+            echo "TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          fi
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Build static site (from tag)
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          rsync -a --exclude '_site' ./ _site/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy tagged version
+        uses: actions/deploy-pages@v4
