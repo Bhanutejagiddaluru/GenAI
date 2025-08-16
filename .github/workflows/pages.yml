@@ -39,7 +39,7 @@ jobs:
         run: stylelint "assets/css/**/*.css" --fix
 
       - name: Lint JS
-        run: eslint "assets/js/**/*.js"
+        run: eslint "assets/js/**/*.js" --fix
 
   build:
     needs: lint
