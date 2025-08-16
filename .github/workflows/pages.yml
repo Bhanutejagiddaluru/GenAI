@@ -38,8 +38,9 @@ jobs:
       - name: Lint CSS (with auto-fix)
         run: stylelint "assets/css/**/*.css" --fix
 
-      - name: Lint JS
+      - name: Lint JS (with auto-fix)
         run: eslint "assets/js/**/*.js" --fix
+
 
   build:
     needs: lint
