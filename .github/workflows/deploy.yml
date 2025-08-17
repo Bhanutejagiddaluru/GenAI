@@ -12,7 +12,7 @@ permissions:
   actions: write       # needed to delete old artifacts
 
 concurrency:
-  group: "pages"
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
